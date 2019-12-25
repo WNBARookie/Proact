@@ -8,6 +8,7 @@ from google.auth.transport.requests import Request
 from Event import Event
 import json
 from tzlocal import get_localzone
+import pandas as pd
 
 
 # If modifying these scopes, delete the file token.pickle.
@@ -17,25 +18,13 @@ calendarID = "vorcc5hji4duuk2llo532gl3o8@group.calendar.google.com"
 
 # Main function
 def main():
-    # events = GetCalendarData()
-    # # print(len(events))
-    # PrintEvents(GetCalendarData())
-    # # summary, start, end, reminders, timezone, description
-    # e=Event('Event', "12:00AM", '5:00PM', True, "US/Chicago", "This is an event.")
-    # print(e.summary)
-    # print(events[0])
-    # x=events[0]
-    # print(type(x['start'].get("dateTime")))
-    # print(datetime(2019,12,24,18,30,25,23))
-
     # task = CreateTask()
-    # PrintEvents(GetCalendarData())
     # AddTask(task)
     # task = GetCalendarData()[0]
     # UpdateTask(task)
     # DeleteTask(task)
     CreateTask()
-    PrintEvents(GetCalendarData(7),7)
+    # PrintEvents(GetCalendarData(7),7)
     # Menu()
 
 
@@ -75,9 +64,11 @@ def Menu():
             print("Please enter 1, 2, 3, or 4")
 
     if choice == 1:
-        PrintEvents(GetCalendarData(7),7)
+        PrintEvents(GetCalendarData(7), 7)
     elif choice == 2:
         CreateTask()
+    elif choice == 3:
+        print("Which task would you like to update?")
 
 
 # Creating task based on user input
@@ -90,61 +81,62 @@ def CreateTask():
     """
 
     # get task input
-    # summary, dueDate, hours = GetTaskInput()
-    summary, dueDate, hours = ("Homework", datetime(2019, 12, 27).date(), 6)
-
+    summary, dueDate, hoursEstimate = GetTaskInput()
+    # summary, dueDate, hoursEstimate = ("Homework", datetime(2019, 12, 28).date(), 6)
 
     # calculate how much time per day (time starts the day after task is created and ends the day before the due date)
     daysBetween = GetDayDiff(dueDate)
-    hours, minutes = GetTimePerDay(hours, daysBetween)
-
+    hours, minutes = GetTimePerDay(hoursEstimate, daysBetween)
 
     # create the string for the description
     description = CreateDescription(hours, minutes, summary)
 
     # """
     # add to calendar everyday until the day before the due date
-    #-- get all dates from current day to day before due date
+    # -- get all dates from current day to day before due date
 
-    currentDate=datetime.today().date()
-    days = [currentDate + timedelta(days=x) for x in range((dueDate-currentDate).days )]
+    currentDate = datetime.today().date()
+    days = [
+        currentDate + timedelta(days=x) for x in range((dueDate - currentDate).days)
+    ]
 
-    # --creating comparison array for dates that have events in google calendar 
-    events=GetCalendarData(len(days))    
-    comparisonArray=[]
+    # --creating comparison array for dates that have events in google calendar
+    events = GetCalendarData(len(days))
+    comparisonArray = []
     for i in range(len(days)):
-        comparisonArray.append('.')
+        comparisonArray.append(".")
 
     for event in events:
-        date= datetime.strptime(event['start'].get('date'), "%Y-%m-%d").date()
-        comparisonArray[days.index(date)] =date
-
-    #--create an event for all days that don't have an event in the date range
+        date = datetime.strptime(event["start"].get("date"), "%Y-%m-%d").date()
+        comparisonArray[days.index(date)] = date
+    # --create an event for all days that don't have an event in the date range
     for x in range(len(days)):
-        # print(days[x] ==comparisonArray[x])
-        if days[x] !=comparisonArray[x]:
-            start=str(days[x])
-            end=str(days[x] + timedelta(days=1))
+        # print(days[x] == comparisonArray[x])
+        if days[x] != comparisonArray[x]:
+            start = str(days[x])
+            end = str(days[x] + timedelta(days=1))
             event = {
-            "summary": "Proact",
-            "description": " ",
-            "start": {"date": start},
-            "end": {"date": end},
+                "summary": "Proact",
+                "description": " ",
+                "start": {"date": start},
+                "end": {"date": end},
             }
             AddTask(event)
 
-    #--adding the description to all the dates
+    # --adding the description to all the dates
 
-    #----get all events in date range
-    events=GetCalendarData(len(days))
+    # ----get all events in date range
+    events = GetCalendarData(len(days))
     # print(events)
-    #----update each event
+    # ----update each event
+    # ------add to CSV
+    AddToCSV(events[0], description, summary, dueDate, hoursEstimate)
     for x in range(len(events)):
-        # print(events[x])
-        UpdateTask(events[x],description,1) #1 means adding type
+        UpdateTask(events[x], description, 1)
+
 
 # """
-#get the difference in between the current date and day before due date
+# get the difference in between the current date and day before due date
 def GetDayDiff(dueDate):
     currentDate = datetime.today().date()
     # dayBeforeDueDate = dueDate - timedelta(days=1)
@@ -154,7 +146,7 @@ def GetDayDiff(dueDate):
     return daysBetween
 
 
-#get amount of time per day
+# get amount of time per day
 def GetTimePerDay(hours, daysBetween):
     timePerDay = hours / daysBetween
     hours = int(timePerDay)
@@ -163,12 +155,12 @@ def GetTimePerDay(hours, daysBetween):
     return hours, minutes
 
 
-#creates description line for calendar
+# creates description line for calendar
 def CreateDescription(hours, minutes, summary):
     description = ""
     minsString = str(minutes) + " minutes"
     hoursString = str(hours) + " hours"
-    
+
     if minutes == 1 or minutes == 0:
         if minutes == 1:
             minsString = "1 minute"
@@ -180,16 +172,17 @@ def CreateDescription(hours, minutes, summary):
         elif hours == 0:
             hoursString = ""
 
-    if minsString=="" or hoursString=="":
-        if minsString=="":
-            description=hoursString
-        elif hoursString=="":
-            description=minsString
+    if minsString == "" or hoursString == "":
+        if minsString == "":
+            description = hoursString
+        elif hoursString == "":
+            description = minsString
     else:
-        description=hoursString + " and " + minsString
-    description= "- "+summary+" --> " + description+"\n"
+        description = hoursString + " and " + minsString
+    description = "- " + summary + " --> " + description + "\n"
 
     return description
+
 
 # Creating the task based on the information given by the user
 def GetTaskInput():
@@ -252,36 +245,6 @@ def GetTaskInput():
 
     return summary, date, hours
 
-    """
-    task = "Test Event"
-    start = datetime(2019, 12, 23, 12, 45, 0, 0)
-    end = datetime(2019, 12, 23, 15, 30, 0, 0)
-    reminders = False
-    localTimezone = get_localzone().zone
-    # timezone = localTimezone
-    description = "This is a test event\nthis is a test event\nthis is a test event"
-    e = Event(task, start, end, reminders, timezone, description)
-    # print(e.start)
-    # print(e.end)
-    # print(type('2019-12-23T09:00:00-07:00'))
-    # print(type(e.start))
-    hold = "2019-12-24T18:30:25-06:00"
-    # print(hold)
-    # print(e.start)
-    # print(e.start == hold)
-    event = {
-        "summary": task,
-        "description": description,
-        # "start": {"dateTime": e.start, "timeZone": localTimezone},
-        # "end": {"dateTime": e.end, "timeZone": localTimezone},
-        "start": {"date": e.start},
-        "end": {"date": e.end},
-    }
-
-    # start=Event.createTime(e.start)
-    return event
-    """
-
 
 # Prints out all of the events in the calendar for the upcoming week
 def PrintEvents(events, days):
@@ -289,18 +252,18 @@ def PrintEvents(events, days):
     -date
     -description(has events/tasks and duration)
     """
-    eventsFound=False
+    eventsFound = False
     try:
-        e=events[0]
-        eventsFound=True
+        e = events[0]
+        eventsFound = True
     except:
-        print("There are no events for the next "+ str(days) +" days. Take a break!")
+        print("There are no events for the next " + str(days) + " days. Take a break!")
     if eventsFound:
-        print("Here are the events for the next " + str(days) +" days:")
+        print("Here are the events for the next " + str(days) + " days:")
         for x in range(len(events)):
             # print(x)
-            event=events[x]
-        # for event in events:
+            event = events[x]
+            # for event in events:
             # print()
             # print("---------------")
             # print(event)
@@ -451,34 +414,31 @@ def UpdateTask(task, description, type):
     -modifying task
     """
 
-
     taskID = task["id"]
     # First retrieve the event from the API.
     event = service.events().get(calendarId=calendarID, eventId=taskID).execute()
-    
+
     newDescription = ""
 
-    #adding new task
-    if type ==1:
+    # adding new task
+    if type == 1:
         # print(task)
-        #check if there is already a description in the calendar
+        # check if there is already a description in the calendar
         split = task["description"].splitlines()
-        if len(description) ==1: #no items in description yet
-            newDescription=description+"\n"
-            print(newDescription)
-        else: #1 or more descriptions so far
+        # print(len(split))
+        if len(split) == 1:  # no items in description yet
+            if split[0] == " ":
+                split.remove(" ")
+            newDescription = description + "\n"
+        else:  # 1 or more descriptions so far
             split[:] = (value for value in split if value != "")
             if split[0] == " ":
                 split.remove(" ")
             split.append(description)
             for x in range(len(split)):
                 newDescription = newDescription + "\n" + split[x]
-    
-
-
-
-    #updating task
-    elif type ==2:
+    # updating task
+    elif type == 2:
         split = event["description"].splitlines()
         split.append("wow this is a new line")
         # print(split)
@@ -490,10 +450,8 @@ def UpdateTask(task, description, type):
         for x in range(len(split)):
             newDescription = newDescription + "\n" + split[x]
 
-    # print(newDescription)
-
     # """
-    #updating task
+    # updating task
     event["description"] = newDescription
 
     updated_event = (
@@ -503,11 +461,12 @@ def UpdateTask(task, description, type):
     )
 
     # # Print the updated date.
-    print(updated_event["updated"])
+    print("Updated: " + str(updated_event["updated"]))
+    print("New Description: " + newDescription)
     # """
 
 
-#deletes task from google calendar
+# deletes task from google calendar
 def DeleteTask(task):
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
@@ -538,6 +497,26 @@ def DeleteTask(task):
 
     # Deleting event
     service.events().delete(calendarId=calendarID, eventId=eventID).execute()
+
+
+def AddToCSV(task, description, summary, dueDate, hoursEstimated):
+    # file/path name
+    path = "C:\\Users\\tmaro\\Documents\\Code\\Projects\\Proact Git\\Proact\\"
+    fileName = "calendar_data.csv"
+
+    # creating dataframe
+    df = pd.read_csv(path + fileName, sep="\t")
+    headers = list(df.columns)
+
+    # creating 2nd dataframe and appending it to original
+    df2 = pd.DataFrame(
+        [[summary, dueDate, hoursEstimated, description]], columns=headers
+    )
+    df = df.append(df2, ignore_index=True)
+
+    print(df)
+    # writing to csv
+    df.to_csv(path + "calendar_data.csv", sep="\t", index=False)
 
 
 if __name__ == "__main__":
