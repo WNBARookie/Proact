@@ -9,13 +9,15 @@ from Event import Event
 import json
 from tzlocal import get_localzone
 import pandas as pd
+import sys
 
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 calendarID = "vorcc5hji4duuk2llo532gl3o8@group.calendar.google.com"
-
+CSVPath = "C:\\Users\\tmaro\\Documents\\Code\\Projects\\Proact Git\\Proact\\"
+CSVFileName = "calendar_data.csv"
 # Main function
 def main():
     # task = CreateTask()
@@ -23,9 +25,13 @@ def main():
     # task = GetCalendarData()[0]
     # UpdateTask(task)
     # DeleteTask(task)
-    CreateTask()
+    # CreateTask()
     # PrintEvents(GetCalendarData(7),7)
-    # Menu()
+    Menu()
+    # DeleteCSV("Coding")
+    # DeleteTask("Homework")
+    # tasks = GetTasksCSV()
+    # print(tasks)
 
 
 # Function that displays the menu that the user interacts with
@@ -47,28 +53,95 @@ def Menu():
 
     notDecided = True
     choice = ""
-    while notDecided:
-        print("\n\nWould you like to :")
-        print("1 - View all of your tasks")
-        print("2 - Add a task")
-        print("3 - Update a task")
-        print("4 - Delete a task")
-        try:
-            x = int(input())
-            if x != 1 and x != 2 and x != 3 and x != 4:
-                print("Please enter 1, 2, 3, or 4")
-            else:
-                choice = x
-                notDecided = False
-        except:
-            print("Please enter 1, 2, 3, or 4")
+    programRunning = True
+    while programRunning:
+        while notDecided:
+            print("\n\nWould you like to :")
+            print("1 - View all of your tasks for the next week")
+            print("2 - Add a task")
+            print("3 - Update a task")
+            print("4 - Delete a task")
+            print("5 - Quit")
+            try:
+                x = int(input())
+                if x != 1 and x != 2 and x != 3 and x != 4 and x != 5:
+                    print("Please enter 1, 2, 3, 4, or 5")
+                else:
+                    choice = x
+                    notDecided = False
+            except:
+                print("Please enter 1, 2, 3, 4, or 5")
 
-    if choice == 1:
-        PrintEvents(GetCalendarData(7), 7)
-    elif choice == 2:
-        CreateTask()
-    elif choice == 3:
-        print("Which task would you like to update?")
+        if choice == 1:
+            PrintEvents(GetCalendarData(7), 7)
+
+        elif choice == 2:
+            CreateTask()
+        elif choice == 3:
+            taskUndecided = True
+            task = ""
+            while taskUndecided:
+                print("\n\nWhich task would you like to update?\n\n")
+                tasks = GetTasksCSV()
+                for task in tasks:
+                    print(task)
+                try:
+                    choice = int(input())
+                    split = [x for x in tasks if str(choice) + " - " in x]
+                    print(split)
+                    if len(split) != 1:
+                        print(
+                            "Please enter one of the numbers next to the corresponding taskddasdas"
+                        )
+
+                    else:
+                        taskUndecided = False
+                        task = tasks[choice]
+                except Exception as e:
+                    print(e)
+                    print(
+                        "Please enter one of the numbers next to the corresponding task"
+                    )
+
+            task = task.split("-")[1].strip()
+            DeleteTask(task)
+            DeleteCSV(task)
+            CreateTask()
+        elif choice == 4:
+            taskUndecided = True
+            task = ""
+            while taskUndecided:
+                print("\n\nWhich task would you like to delete?\n\n")
+                tasks = GetTasksCSV()
+                for task in tasks:
+                    print(task)
+                try:
+                    choice = int(input())
+                    split = [x for x in tasks if str(choice) + " - " in x]
+                    if len(split) != 1:
+                        print(
+                            "Please enter one of the numbers next to the corresponding task"
+                        )
+
+                    else:
+                        taskUndecided = False
+                        task = tasks[choice]
+                except Exception as e:
+                    print(e)
+                    print(
+                        "Please enter one of the numbers next to the corresponding task"
+                    )
+
+            task = task.split("-")[1].strip()
+            DeleteTask(task)
+            DeleteCSV(task)
+        elif choice == 5:
+            print("\n\n------------------------------\n\n")
+            print("Thanks for using Proact!")
+            print("\n\n------------------------------\n\n")
+            sys.exit(0)
+
+        notDecided = True
 
 
 # Creating task based on user input
@@ -82,7 +155,7 @@ def CreateTask():
 
     # get task input
     summary, dueDate, hoursEstimate = GetTaskInput()
-    # summary, dueDate, hoursEstimate = ("Homework", datetime(2019, 12, 28).date(), 6)
+    # summary, dueDate, hoursEstimate = ("Coding", datetime(2019, 12, 28).date(), 5)
 
     # calculate how much time per day (time starts the day after task is created and ends the day before the due date)
     daysBetween = GetDayDiff(dueDate)
@@ -273,7 +346,7 @@ def PrintEvents(events, days):
             date = event["start"].get("date")
             date = datetime.strptime(date, "%Y-%m-%d").strftime("%b %d, %Y")
             description = event["description"]
-            print(description.splitlines())
+            # print(description.splitlines())
             print()
             print(date)
             print("---------------")
@@ -490,33 +563,105 @@ def DeleteTask(task):
 
     """
     -if task is last one left on a day, delete the whole event
-    -else modify description on all events it is on
+    -else update description on all events it is on
+
+    TODO
+    -get info from csv
+    -figure out if task is last one
+    -adjust task/event accordingly
     """
+    # get information about task from csv
+    # --creating dataframe
+    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
+    row = df.loc[df["Task"] == task]
+    rowIndex = df[df["Task"] == task].index.item()
+    description = df.at[rowIndex, "Description"].strip("\n")
+    entryDate = df.at[rowIndex, "Entry Date"]
+    dueDate = df.at[rowIndex, "Due Date"]
+    dueDate = datetime.strptime(dueDate, "%Y-%m-%d").date()
 
-    eventID = task["id"]
+    # figure out if task is last one on event
 
-    # Deleting event
-    service.events().delete(calendarId=calendarID, eventId=eventID).execute()
+    # --get dates from today to day before due date
+    currentDate = datetime.today().date()
+    days = [
+        currentDate + timedelta(days=x) for x in range((dueDate - currentDate).days)
+    ]
+
+    # --get all the events from this ^ date range from google calendar
+    events = GetCalendarData(len(days))
+    # --check how many descriptions are per day
+    for event in events:
+        descriptionOfEvent = event["description"]
+        split = descriptionOfEvent.splitlines()
+        eventID = event["id"]
+        if len(split) <= 2:  # only 1 task, delete this event
+            service.events().delete(calendarId=calendarID, eventId=eventID).execute()
+            print("deleted event on: " + str(event["start"].get("date")))
+        else:  # get rid of it on description and update description
+            split = [x for x in split if description not in x]
+            if split[0] == "":
+                split.pop(0)
+
+            newDescription = ""
+
+            for x in range(len(split)):
+                newDescription = newDescription + "\n" + split[x]
+
+            # updating task
+            event["description"] = newDescription
+            updated_event = (
+                service.events()
+                .update(calendarId=calendarID, eventId=event["id"], body=event)
+                .execute()
+            )
 
 
+# adds to csv upon creation of event/task
 def AddToCSV(task, description, summary, dueDate, hoursEstimated):
-    # file/path name
-    path = "C:\\Users\\tmaro\\Documents\\Code\\Projects\\Proact Git\\Proact\\"
-    fileName = "calendar_data.csv"
-
+    entryDate = datetime.today().date()
     # creating dataframe
-    df = pd.read_csv(path + fileName, sep="\t")
+    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
     headers = list(df.columns)
-
     # creating 2nd dataframe and appending it to original
     df2 = pd.DataFrame(
-        [[summary, dueDate, hoursEstimated, description]], columns=headers
+        [[entryDate, summary, dueDate, hoursEstimated, description]], columns=headers
     )
     df = df.append(df2, ignore_index=True)
 
-    print(df)
     # writing to csv
-    df.to_csv(path + "calendar_data.csv", sep="\t", index=False)
+    df.to_csv(CSVPath + CSVFileName, sep=",", index=False)
+
+
+# updates csv
+def UpdateCSV():
+    pass
+
+
+# removes task/row from csv
+def DeleteCSV(task):
+    # creating dataframe
+    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
+    row = df.loc[df["Task"] == task]
+    rowIndex = df[df["Task"] == task].index.item()
+    df = df.drop(rowIndex)
+    # writing to csv
+    df.to_csv(CSVPath + CSVFileName, sep=",", index=False)
+
+
+# gets all of the tasks entered by the user from the csv
+def GetTasksCSV():
+    # creating dataframe
+    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
+
+    # extract tasks column
+    tasks = list(df["Task"])
+
+    tasksWithIndex = []
+    for x in range(len(tasks)):
+        tasksWithIndex.append(str(x) + " - " + str(tasks[x]))
+
+    return tasksWithIndex
 
 
 if __name__ == "__main__":
