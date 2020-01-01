@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-section">
+    <form action="" method="POST">
+        {{form.hidden_tag()}}
+        <fieldset class="form-group">
+            {% if update %}
+            <legend class="border-bottom mb-4">Update Task</legend>
+            {% else %}
+            <legend class="border-bottom mb-4">Add Task</legend>
+            {% endif %}
+
+            <div class="form-group">
+                {{form.task.label(class="form-control-label")}}
+                {% if form.task.errors %}
+                {{ form.task(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.task.errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                {{ form.task(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{form.dueDate.label(class="form-control-label")}}
+                {% if form.dueDate.errors %}
+                {{ form.dueDate(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.dueDate.errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                {{ form.dueDate(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{form.hoursEstimated.label(class="form-control-label")}}
+                {% if form.hoursEstimated.errors %}
+                {{ form.hoursEstimated(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.hoursEstimated.errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                {{ form.hoursEstimated(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+        </fieldset>
+
+        {% if update %}
+        <div class="form-group">
+            {{form.submit(class="btn btn-success")}}
+            {{form.delete(class="btn btn-danger")}}
+        </div>
+        {% else %}
+        <div class="form-group">
+            {{form.submit(class="btn btn-success")}}
+        </div>
+        {% endif %}
+
+    </form>
+
+</div>
+{% endblock content %}

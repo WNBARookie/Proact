@@ -145,16 +145,16 @@ def Menu():
 
 
 # Creating task based on user input
-def CreateTask():
+def CreateTask(summary, dueDate, hoursEstimate):
     """
     -get task input
     -calculate how much time per day
     -create the string for the description
     -add to calendar everyday until the day before the due date
     """
-
+    dueDate=datetime.strptime(dueDate, "%m-%d-%Y").date()
     # get task input
-    summary, dueDate, hoursEstimate = GetTaskInput()
+    # summary, dueDate, hoursEstimate = GetTaskInput()
     # summary, dueDate, hoursEstimate = ("Coding", datetime(2019, 12, 28).date(), 5)
 
     # calculate how much time per day (time starts the day after task is created and ends the day before the due date)
@@ -386,7 +386,7 @@ def PrintEvents(events, days):
 
 
 # Makes call to Google Calendar API and gets events
-def GetCalendarData(days):
+def GetCalendarData(days, overdue=False):
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -412,14 +412,40 @@ def GetCalendarData(days):
     colors = service.colors().get(fields="event").execute()
 
     # Call the Calendar API
-    now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+    now=""
+    weekAgo=""
+    weekFromNow=""
+    timeMin=""
+    timeMax=""
+    if overdue:
+        weekAgo=datetime.utcnow()-timedelta(days=7)
+        weekAgo=weekAgo.isoformat() + "Z"
+        now=datetime.utcnow()-timedelta(days=1)
+        now=now.isoformat()+'Z'
+
+        timeMin=weekAgo
+        timeMax=now
+    else:
+        now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+        weekFromNow=datetime.utcnow()+timedelta(days=7)
+        weekFromNow=weekFromNow.isoformat() + "Z"
+
+        timeMin=now
+        timeMax=weekFromNow
+
+ 
+    # print("HERE\n\n\n\n")
+    # print(timeMin)
+    # print(timeMax)
+    # print(timeMin<timeMax)
     # print("Getting the upcoming 10 events")
     events_result = (
         service.events()
         .list(
             calendarId=calendarID,
-            timeMin=now,
-            maxResults=days,
+            timeMin=timeMin,
+            timeMax=timeMax,
+            maxResults=7,
             singleEvents=True,
             orderBy="startTime",
         )
@@ -427,6 +453,10 @@ def GetCalendarData(days):
     )
     events = events_result.get("items", [])
 
+    # print(len(events))
+    # for event in events:
+    #    start = event['start'].get('dateTime', event['start'].get('date'))
+    #    print(start, event['summary'])
     # if not events:
     #     print("No upcoming events found.")
 
@@ -615,6 +645,84 @@ def DeleteTask(task):
                 .update(calendarId=calendarID, eventId=event["id"], body=event)
                 .execute()
             )
+
+
+
+#gets rid of task in description on google calendar 
+def markAsComplete(description, date):
+    creds = None
+    # The file token.pickle stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists("token.pickle"):
+        with open("token.pickle", "rb") as token:
+            creds = pickle.load(token)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open("token.pickle", "wb") as token:
+            pickle.dump(creds, token)
+
+    service = build("calendar", "v3", credentials=creds)
+
+
+    utc_offset_timedelta = datetime.utcnow() - datetime.now()
+    local_datetime = datetime.strptime(date, "%b %d, %Y")
+    result_utc_datetime = local_datetime + utc_offset_timedelta
+    result_utc_datetime=result_utc_datetime.isoformat()+"Z"
+
+    timeMin=result_utc_datetime
+    events_result = (
+        service.events()
+        .list(
+            calendarId=calendarID,
+            timeMin=timeMin,
+            # timeMax=timeMax,
+            maxResults=1,
+            singleEvents=True,
+            orderBy="startTime",
+        )
+        .execute()
+    )
+
+    events = events_result.get("items", [])
+    event=events[0]
+
+    descriptionOfEvent = event["description"]
+    split = descriptionOfEvent.splitlines()
+
+    description="- "+description
+    if split[0] == "":
+        split.pop(0)
+
+
+    if description in split:
+        split.remove(description)
+
+    newDescription = ""
+
+    for x in range(len(split)):
+        newDescription = newDescription + "\n" + split[x]
+
+    # updating task
+    event["description"] = newDescription
+    updated_event = (
+        service.events()
+        .update(calendarId=calendarID, eventId=event["id"], body=event)
+        .execute()
+    )
+
+    # # # Print the updated date.
+    # print("Updated: " + str(updated_event["updated"]))
+    # print("New Description: " + newDescription)
+    # # """
+
+
 
 
 # adds to csv upon creation of event/task
