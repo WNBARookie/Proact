@@ -16,132 +16,10 @@ import sys
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 calendarID = "vorcc5hji4duuk2llo532gl3o8@group.calendar.google.com"
-CSVPath = "C:\\Users\\tmaro\\Documents\\Code\\Projects\\Proact Git\\Proact\\"
-CSVFileName = "calendar_data.csv"
-# Main function
+
+
 def main():
-    # task = CreateTask()
-    # AddTask(task)
-    # task = GetCalendarData()[0]
-    # UpdateTask(task)
-    # DeleteTask(task)
-    # CreateTask()
-    # PrintEvents(GetCalendarData(7),7)
-    Menu()
-    # DeleteCSV("Coding")
-    # DeleteTask("Homework")
-    # tasks = GetTasksCSV()
-    # print(tasks)
-
-
-# Function that displays the menu that the user interacts with
-def Menu():
-
-    print(
-        r"""
-======================================================
-  _____                      _   
- |  __ \                    | |  
- | |__) | __ ___   __ _  ___| |_ 
- |  ___/ '__/ _ \ / _` |/ __| __|
- | |   | | | (_) | (_| | (__| |_ 
- |_|   |_|  \___/ \__,_|\___|\__|
-                                                              
-======================================================                                 
-"""
-    )
-
-    notDecided = True
-    choice = ""
-    programRunning = True
-    while programRunning:
-        while notDecided:
-            print("\n\nWould you like to :")
-            print("1 - View all of your tasks for the next week")
-            print("2 - Add a task")
-            print("3 - Update a task")
-            print("4 - Delete a task")
-            print("5 - Quit")
-            try:
-                x = int(input())
-                if x != 1 and x != 2 and x != 3 and x != 4 and x != 5:
-                    print("Please enter 1, 2, 3, 4, or 5")
-                else:
-                    choice = x
-                    notDecided = False
-            except:
-                print("Please enter 1, 2, 3, 4, or 5")
-
-        if choice == 1:
-            PrintEvents(GetCalendarData(7), 7)
-
-        elif choice == 2:
-            CreateTask()
-        elif choice == 3:
-            taskUndecided = True
-            task = ""
-            while taskUndecided:
-                print("\n\nWhich task would you like to update?\n\n")
-                tasks = GetTasksCSV()
-                for task in tasks:
-                    print(task)
-                try:
-                    choice = int(input())
-                    split = [x for x in tasks if str(choice) + " - " in x]
-                    print(split)
-                    if len(split) != 1:
-                        print(
-                            "Please enter one of the numbers next to the corresponding taskddasdas"
-                        )
-
-                    else:
-                        taskUndecided = False
-                        task = tasks[choice]
-                except Exception as e:
-                    print(e)
-                    print(
-                        "Please enter one of the numbers next to the corresponding task"
-                    )
-
-            task = task.split("-")[1].strip()
-            DeleteTask(task)
-            DeleteCSV(task)
-            CreateTask()
-        elif choice == 4:
-            taskUndecided = True
-            task = ""
-            while taskUndecided:
-                print("\n\nWhich task would you like to delete?\n\n")
-                tasks = GetTasksCSV()
-                for task in tasks:
-                    print(task)
-                try:
-                    choice = int(input())
-                    split = [x for x in tasks if str(choice) + " - " in x]
-                    if len(split) != 1:
-                        print(
-                            "Please enter one of the numbers next to the corresponding task"
-                        )
-
-                    else:
-                        taskUndecided = False
-                        task = tasks[choice]
-                except Exception as e:
-                    print(e)
-                    print(
-                        "Please enter one of the numbers next to the corresponding task"
-                    )
-
-            task = task.split("-")[1].strip()
-            DeleteTask(task)
-            DeleteCSV(task)
-        elif choice == 5:
-            print("\n\n------------------------------\n\n")
-            print("Thanks for using Proact!")
-            print("\n\n------------------------------\n\n")
-            sys.exit(0)
-
-        notDecided = True
+    pass
 
 
 # Creating task based on user input
@@ -152,10 +30,8 @@ def CreateTask(summary, dueDate, hoursEstimate):
     -create the string for the description
     -add to calendar everyday until the day before the due date
     """
-    dueDate=datetime.strptime(dueDate, "%m-%d-%Y").date()
     # get task input
-    # summary, dueDate, hoursEstimate = GetTaskInput()
-    # summary, dueDate, hoursEstimate = ("Coding", datetime(2019, 12, 28).date(), 5)
+    dueDate = datetime.strptime(dueDate, "%m-%d-%Y").date()
 
     # calculate how much time per day (time starts the day after task is created and ends the day before the due date)
     daysBetween = GetDayDiff(dueDate)
@@ -200,16 +76,13 @@ def CreateTask(summary, dueDate, hoursEstimate):
 
     # ----get all events in date range
     events = GetCalendarData(len(days))
-    # print(events)
     # ----update each event
-    # ------add to CSV
-    AddToCSV(events[0], description, summary, dueDate, hoursEstimate)
     for x in range(len(events)):
         UpdateTask(events[x], description, 1)
 
 
 # """
-# get the difference in between the current date and day before due date
+# get the difference in between the current date and day before due date(datetime)
 def GetDayDiff(dueDate):
     currentDate = datetime.today().date()
     # dayBeforeDueDate = dueDate - timedelta(days=1)
@@ -319,72 +192,6 @@ def GetTaskInput():
     return summary, date, hours
 
 
-# Prints out all of the events in the calendar for the upcoming week
-def PrintEvents(events, days):
-    """
-    -date
-    -description(has events/tasks and duration)
-    """
-    eventsFound = False
-    try:
-        e = events[0]
-        eventsFound = True
-    except:
-        print("There are no events for the next " + str(days) + " days. Take a break!")
-    if eventsFound:
-        print("Here are the events for the next " + str(days) + " days:")
-        for x in range(len(events)):
-            # print(x)
-            event = events[x]
-            # for event in events:
-            # print()
-            # print("---------------")
-            # print(event)
-            # print("---------------")
-            # print()
-
-            date = event["start"].get("date")
-            date = datetime.strptime(date, "%Y-%m-%d").strftime("%b %d, %Y")
-            description = event["description"]
-            # print(description.splitlines())
-            print()
-            print(date)
-            print("---------------")
-            print(description)
-            print("---------------")
-            print()
-        """
-        #formatted date
-        date = event["start"].get("dateTime").split("T")[0]
-        date = datetime.strptime(date, "%Y-%m-%d").strftime("%b %m, %Y")
-        #start/end time
-        start = event["start"].get("dateTime")
-        end = event["end"].get("dateTime")
-        #title/description
-        title = event["summary"]
-        description=event['description']
-        #time duration
-        time1=start.split('T')[1].split("-")[0]
-        time2=end.split('T')[1].split("-")[0]
-        timeFormat = '%H:%M:%S'
-        duration = datetime.strptime(time2, timeFormat) - datetime.strptime(time1, timeFormat)
-        duration=str(duration).split(":")
-        hours=duration[0]
-        mins=duration[1]
-        mins =mins[1:] if mins[0]=="0" else mins #getting rid of leading zero if single digit
-
-        #printing event information
-        print()
-        print("---------------")
-        print("Event: " + title)
-        print("Date: " + date)
-        print("Description: " + description)
-        print("Duration: " + hours +" hours and " + mins + " seconds.")
-        print("---------------")
-        print()
-        """
-
-
 # Makes call to Google Calendar API and gets events
 def GetCalendarData(days, overdue=False):
     """Shows basic usage of the Google Calendar API.
@@ -412,33 +219,27 @@ def GetCalendarData(days, overdue=False):
     colors = service.colors().get(fields="event").execute()
 
     # Call the Calendar API
-    now=""
-    weekAgo=""
-    weekFromNow=""
-    timeMin=""
-    timeMax=""
+    now = ""
+    weekAgo = ""
+    weekFromNow = ""
+    timeMin = ""
+    timeMax = ""
     if overdue:
-        weekAgo=datetime.utcnow()-timedelta(days=7)
-        weekAgo=weekAgo.isoformat() + "Z"
-        now=datetime.utcnow()-timedelta(days=1)
-        now=now.isoformat()+'Z'
+        weekAgo = datetime.utcnow() - timedelta(days=7)
+        weekAgo = weekAgo.isoformat() + "Z"
+        now = datetime.utcnow() - timedelta(days=1)
+        now = now.isoformat() + "Z"
 
-        timeMin=weekAgo
-        timeMax=now
+        timeMin = weekAgo
+        timeMax = now
     else:
         now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-        weekFromNow=datetime.utcnow()+timedelta(days=7)
-        weekFromNow=weekFromNow.isoformat() + "Z"
+        weekFromNow = datetime.utcnow() + timedelta(days=7)
+        weekFromNow = weekFromNow.isoformat() + "Z"
 
-        timeMin=now
-        timeMax=weekFromNow
+        timeMin = now
+        timeMax = weekFromNow
 
- 
-    # print("HERE\n\n\n\n")
-    # print(timeMin)
-    # print(timeMax)
-    # print(timeMin<timeMax)
-    # print("Getting the upcoming 10 events")
     events_result = (
         service.events()
         .list(
@@ -452,13 +253,6 @@ def GetCalendarData(days, overdue=False):
         .execute()
     )
     events = events_result.get("items", [])
-
-    # print(len(events))
-    # for event in events:
-    #    start = event['start'].get('dateTime', event['start'].get('date'))
-    #    print(start, event['summary'])
-    # if not events:
-    #     print("No upcoming events found.")
 
     return events
 
@@ -570,7 +364,7 @@ def UpdateTask(task, description, type):
 
 
 # deletes task from google calendar
-def DeleteTask(task):
+def DeleteTask(task, description, dueDate):
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -600,15 +394,7 @@ def DeleteTask(task):
     -figure out if task is last one
     -adjust task/event accordingly
     """
-    # get information about task from csv
-    # --creating dataframe
-    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
-    row = df.loc[df["Task"] == task]
-    rowIndex = df[df["Task"] == task].index.item()
-    description = df.at[rowIndex, "Description"].strip("\n")
-    entryDate = df.at[rowIndex, "Entry Date"]
-    dueDate = df.at[rowIndex, "Due Date"]
-    dueDate = datetime.strptime(dueDate, "%Y-%m-%d").date()
+    dueDate = datetime.strptime(dueDate, "%m-%d-%Y").date()
 
     # figure out if task is last one on event
 
@@ -647,9 +433,8 @@ def DeleteTask(task):
             )
 
 
-
-#gets rid of task in description on google calendar 
-def markAsComplete(description, date):
+# gets rid of task in description on google calendar
+def markAsComplete(description, date, completed):
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -670,19 +455,15 @@ def markAsComplete(description, date):
 
     service = build("calendar", "v3", credentials=creds)
 
+    # get the formatted utc timestamp of the selected date
+    result_utc_datetime = getUTCTime(date)
 
-    utc_offset_timedelta = datetime.utcnow() - datetime.now()
-    local_datetime = datetime.strptime(date, "%b %d, %Y")
-    result_utc_datetime = local_datetime + utc_offset_timedelta
-    result_utc_datetime=result_utc_datetime.isoformat()+"Z"
-
-    timeMin=result_utc_datetime
+    # get the event from specific date in GC
     events_result = (
         service.events()
         .list(
             calendarId=calendarID,
-            timeMin=timeMin,
-            # timeMax=timeMax,
+            timeMin=result_utc_datetime,
             maxResults=1,
             singleEvents=True,
             orderBy="startTime",
@@ -691,15 +472,15 @@ def markAsComplete(description, date):
     )
 
     events = events_result.get("items", [])
-    event=events[0]
+    event = events[0]
 
+    # take the description and remove it from the event in GC
     descriptionOfEvent = event["description"]
     split = descriptionOfEvent.splitlines()
 
-    description="- "+description
+    description = "- " + description
     if split[0] == "":
         split.pop(0)
-
 
     if description in split:
         split.remove(description)
@@ -723,53 +504,48 @@ def markAsComplete(description, date):
     # # """
 
 
+# gets the utc time of a given date and formats it for google calendar
+def getUTCTime(date):
+    utc_offset_timedelta = datetime.utcnow() - datetime.now()
+    local_datetime = datetime.strptime(date, "%b %d, %Y")
+    result_utc_datetime = local_datetime + utc_offset_timedelta
+    result_utc_datetime = result_utc_datetime.isoformat() + "Z"
+    return result_utc_datetime
 
 
-# adds to csv upon creation of event/task
-def AddToCSV(task, description, summary, dueDate, hoursEstimated):
-    entryDate = datetime.today().date()
-    # creating dataframe
-    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
-    headers = list(df.columns)
-    # creating 2nd dataframe and appending it to original
-    df2 = pd.DataFrame(
-        [[entryDate, summary, dueDate, hoursEstimated, description]], columns=headers
-    )
-    df = df.append(df2, ignore_index=True)
+def reschedule(description, date, dueDate):
 
-    # writing to csv
-    df.to_csv(CSVPath + CSVFileName, sep=",", index=False)
+    """
+    - remove task from current date in google calendar
+    - figure out the new amount of time per day
+    - update all of the descriptions
+    """
 
+    # remove task from calendar
+    # markAsComplete(description, date, False)
 
-# updates csv
-def UpdateCSV():
-    pass
+    # figure out the amount of time per day
 
+    # -- figure out how many of the tasks are overdue at currently
 
-# removes task/row from csv
-def DeleteCSV(task):
-    # creating dataframe
-    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
-    row = df.loc[df["Task"] == task]
-    rowIndex = df[df["Task"] == task].index.item()
-    df = df.drop(rowIndex)
-    # writing to csv
-    df.to_csv(CSVPath + CSVFileName, sep=",", index=False)
+    overdueEvents = GetCalendarData(7, True)
+    overdueTaskCounter = 0
+    activeEvents = GetCalendarData(7, True)
+    activeTaskCounter = 0
 
+    for event in overdueEvents:
+        desc = event["description"]
+        if description in desc:
+            overdueTaskCounter = overdueTaskCounter + 1
+    print(overdueTaskCounter)
 
-# gets all of the tasks entered by the user from the csv
-def GetTasksCSV():
-    # creating dataframe
-    df = pd.read_csv(CSVPath + CSVFileName, sep=",")
+    for event in activeEvents:
+        desc = event["description"]
+        if description in desc:
+            activeTaskCounter = activeTaskCounter + 1
+    print(activeTaskCounter)
 
-    # extract tasks column
-    tasks = list(df["Task"])
-
-    tasksWithIndex = []
-    for x in range(len(tasks)):
-        tasksWithIndex.append(str(x) + " - " + str(tasks[x]))
-
-    return tasksWithIndex
+    print("RESCHEDULE")
 
 
 if __name__ == "__main__":

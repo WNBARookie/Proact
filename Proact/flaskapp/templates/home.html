@@ -32,6 +32,9 @@
                         {{overdueTasks[i].description[x][1:]}}
                         <input type="submit" value="Mark as Complete" style="float:right"
                             name='{{overdueTasks[i].description[x][1:]}}' class="btn btn-info">
+                        <input type="submit" value="Reschedule" style="float:right; margin-right:2%"
+                            name='reschedule_{{overdueTasks[i].date}}_{{overdueTasks[i].description[x][1:]}}'
+                            class="btn btn-light">
                     </button>
 
 
